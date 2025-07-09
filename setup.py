@@ -17,12 +17,12 @@ def read_requirements():
 setup(
     name="chessmentor-ai",
     version="0.1.0",
-    author="Kaushik - ChessMentor-AI Founder",
+    author="ChessMentor-AI Team",
     author_email="kaushiksubs03@gmail.com",
-    description="A chess mentor application with Stockfish AI",
+    description="A browser-based chess mentor application with Stockfish AI",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/chessmentor-ai",
+    url="https://github.com/KaushikNimmakayala56/Chess_Mentor",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -58,8 +58,8 @@ setup(
     },
     keywords="chess, ai, stockfish, streamlit, education, game",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/chessmentor-ai/issues",
-        "Source": "https://github.com/yourusername/chessmentor-ai",
-        "Documentation": "https://github.com/yourusername/chessmentor-ai#readme",
+        "Bug Reports": "https://github.com/KaushikNimmakayala56/Chess_Mentor/issues",
+        "Source": "https://github.com/KaushikNimmakayala56/Chess_Mentor",
+        "Documentation": "https://github.com/KaushikNimmakayala56/Chess_Mentor#readme",
     },
 ) 
