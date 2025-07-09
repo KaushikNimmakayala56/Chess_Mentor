@@ -1,0 +1,47 @@
+[
+  {
+    "move_number": 1,
+    "centipawn_loss": 13,
+    "classification": "good"
+  },
+  {
+    "move_number": 2,
+    "centipawn_loss": 0,
+    "classification": "good"
+  },
+  {
+    "move_number": 3,
+    "centipawn_loss": 1,
+    "classification": "good"
+  },
+  {
+    "move_number": 4,
+    "centipawn_loss": 2,
+    "classification": "good"
+  },
+  {
+    "move_number": 5,
+    "centipawn_loss": 1,
+    "classification": "good"
+  },
+  {
+    "move_number": 6,
+    "centipawn_loss": 5,
+    "classification": "good"
+  },
+  {
+    "move_number": 7,
+    "centipawn_loss": 4,
+    "classification": "good"
+  },
+  {
+    "move_number": 8,
+    "centipawn_loss": 5,
+    "classification": "good"
+  },
+  {
+    "move_number": 9,
+    "centipawn_loss": 7,
+    "classification": "good"
+  }
+]

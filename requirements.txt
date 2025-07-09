@@ -1,0 +1,27 @@
+# ChessMentor-AI Dependencies
+# Core chess and engine dependencies
+chess==1.11.2
+python-chess==1.999
+
+# Web framework and components
+streamlit==1.46.1
+streamlit-elements==0.1.0
+flask==3.1.1
+
+# AI and machine learning
+llama-cpp-python==0.3.9
+numpy==2.3.1
+pandas==2.3.0
+
+# Data handling and utilities
+requests==2.32.4
+python-dateutil==2.9.0.post0
+
+# Development and testing (optional)
+pytest==8.0.0
+pytest-cov==5.0.0
+black==24.1.1
+flake8==7.0.0
+
+# Environment and configuration
+python-dotenv==1.0.0 
