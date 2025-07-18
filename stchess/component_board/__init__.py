@@ -1,6 +1,5 @@
 import os
 import streamlit.components.v1 as components
-from .component_board import board
 from ..config import DEFAULT_FEN
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
@@ -29,7 +28,7 @@ if not _RELEASE:
         # Pass `url` here to tell Streamlit that the component will be served
         # by the local dev server that you run via `npm run start`.
         # (This is useful while your component is in development.)
-        url="http://localhost:3001",
+        url="http://localhost:3000",
     )
 else:
     # When we're distributing a production version of the component, we'll
@@ -45,31 +44,16 @@ else:
 # `declare_component` and call it done. The wrapper allows us to customize
 # our component's API: we can pre-process its input args, post-process its
 # output value, and add a docstring for users.
-def board(color,white=None,black = None,key=None):
-    """Create a new instance of "my_component".
-    """
-    # Call through to our private component function. Arguments we pass here
-    # will be sent to the frontend, where they'll be available in an "args"
-    # dictionary.
-    #
-    # "default" is a special argument that specifies the initial return
-    # value of the component before the user has interacted with it.
-
+def board(color, fen=None, white=None, black=None, key=None):
+    """Create a new instance of the Streamlit chessboard component."""
     component_value = _component_func(
         color=color,
-        white = white,
-        black = black,
+        fen=fen,
+        white=white,
+        black=black,
         key=key, 
-        default={"fen":DEFAULT_FEN}
+        default={"fen": DEFAULT_FEN}
     )
-
-    # if new_fen is not None:
-    #     component_value = {"fen":new_fen}
-
-    # print("Component   fen",fen,component_value)
-
-    # We could modify the value returned from the component if we wanted.
-    # There's no need to do this in our simple example - but it's an option.
     return component_value
 
 

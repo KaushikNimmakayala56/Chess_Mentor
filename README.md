@@ -7,3 +7,4 @@ A browser-based chess mentor app where you play against Stockfish AI and get mov
 - **All code and analysis run locally**
 
 GitHub: https://github.com/KaushikNimmakayala56/Chess_Mentor
+ 

@@ -1,10 +1,10 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import MyComponent from "./MyComponent"
+import ChessComponent from "./ChessComponent"
 
 ReactDOM.render(
   <React.StrictMode>
-    <MyComponent />
+    <ChessComponent color="white" />
   </React.StrictMode>,
   document.getElementById("root")
 )

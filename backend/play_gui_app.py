@@ -26,39 +26,43 @@ if "board" not in st.session_state:
     st.session_state.game = chess.pgn.Game()
 
 # === UI HEADER ===
-st.title("♟ ChessMentor-AI")
+st.title("KaushikChessAPP")
 st.markdown("Play as **White** against a 2000+ ELO Stockfish engine with a full React GUI board.")
 
 # === RENDER REACT BOARD COMPONENT ===
 user_move = board(
     color="white",
+    fen=st.session_state.board.fen(),
     key="chessboard"
 )
 
 # === HANDLE PLAYER MOVE ===
-if user_move and "fen" in user_move and user_move["fen"] != st.session_state.board.fen():
+if user_move and "move" in user_move:
+    # Debug: Print FEN received from frontend and backend's current FEN
+    print("[DEBUG] FEN from frontend:", user_move.get("fen"))
+    print("[DEBUG] Backend board FEN before move:", st.session_state.board.fen())
+    move_dict = user_move["move"]
+    move_uci = move_dict["from"] + move_dict["to"]
+    if "promotion" in move_dict and move_dict["promotion"]:
+        move_uci += move_dict["promotion"]
+    print("[DEBUG] Attempting to apply move:", move_uci)
+    move = chess.Move.from_uci(move_uci)
     try:
-        move_found = False
-        for move in st.session_state.board.legal_moves:
-            test_board = st.session_state.board.copy()
-            test_board.push(move)
-            if test_board.fen() == user_move["fen"]:
-                st.session_state.board.push(move)
-                st.session_state.moves.append(move.uci())
-                move_found = True
-                break
-
-        if not move_found:
-            st.warning("Couldn't find matching legal move for FEN.")
-
-        # === AI MOVE ===
+        st.session_state.board.push(move)
+        st.session_state.moves.append(move.uci())
+        print("[DEBUG] Backend board FEN after user move:", st.session_state.board.fen())
+        # Stockfish move
+        ai_move = None
         if not st.session_state.board.is_game_over():
             result = st.session_state.engine.play(st.session_state.board, chess.engine.Limit(depth=15))
             ai_move = result.move
+            print("[DEBUG] Stockfish move:", ai_move)
             st.session_state.board.push(ai_move)
             st.session_state.moves.append(ai_move.uci())
-
+            print("[DEBUG] Backend board FEN after Stockfish move:", st.session_state.board.fen())
+        # Instead of st.json and st.stop, just let the rerun happen and pass the latest FEN as a prop
     except Exception as e:
+        print("[DEBUG] Exception while applying move:", e)
         st.warning(f"Invalid move or error: {e}")
 
 # === GAME END ===
@@ -86,4 +90,4 @@ if st.button("Reset Game"):
     st.session_state.board = chess.Board()
     st.session_state.moves = []
     st.session_state.game = chess.pgn.Game()
-    st.experimental_rerun()
+    st.rerun()

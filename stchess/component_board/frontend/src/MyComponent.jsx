@@ -16,18 +16,15 @@ class MyComponent extends StreamlitComponentBase{
   }
 
 
-  onMove = ({fen,last_move,is_checkmate}) => {
-
-    let newState = {
-      fen:fen,
-      last_move:last_move,
-      is_checkmate:is_checkmate,
-    }
+  onMove = (data) => {
+    console.log("[MyComponent] onMove called with:", data);
     this.setState(
-      prevState => (newState),
-      () => Streamlit.setComponentValue(this.state)
-    )
-
+      prevState => (data),
+      () => {
+        console.log("[MyComponent] Calling Streamlit.setComponentValue with:", this.state);
+        Streamlit.setComponentValue(this.state);
+      }
+    );
   }
 
   // componentDidUpdate=(prevProps) => {
@@ -43,6 +40,7 @@ class MyComponent extends StreamlitComponentBase{
     const color = this.props.args["color"]
     const white = this.props.args["white"]
     const black = this.props.args["black"]
+    const fen = this.props.args["fen"] || "";
 
     console.log(white,black)
 
@@ -56,7 +54,7 @@ class MyComponent extends StreamlitComponentBase{
     // be available to the Python program.
     return (
       <div style={{"textAlign":"center","height":500}}>
-        <ChessComponent color={color} white={white} black={black} onMove={this.onMove}/>
+        <ChessComponent color={color} white={white} black={black} fen={fen} onMove={this.onMove}/>
       </div>
     )
   }
