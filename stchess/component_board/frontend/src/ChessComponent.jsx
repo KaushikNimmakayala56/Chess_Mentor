@@ -15,6 +15,8 @@ const ChessComponent = ({ color }) => {
   const [gameResult, setGameResult] = useState("");
   const [moveHistory, setMoveHistory] = useState([]);
   const [feedback, setFeedback] = useState("");
+  const [recommendedMove, setRecommendedMove] = useState("");
+  const [currentRecommendation, setCurrentRecommendation] = useState("");
 
   // Helper: get turn from FEN
   const getTurn = (fenStr) => {
@@ -186,6 +188,7 @@ const ChessComponent = ({ color }) => {
           setGameResult(data.result || "");
           setMoveHistory(data.move_history || []);
           setFeedback(data.analysis?.feedback || "");
+          setRecommendedMove(data.analysis?.best_move || "");
           setError("");
         }
         setLoading(false);
@@ -213,6 +216,8 @@ const ChessComponent = ({ color }) => {
         setGameResult("");
         setMoveHistory([]);
         setFeedback("");
+        setRecommendedMove("");
+        setCurrentRecommendation("");
         setLoading(false);
       });
   };
@@ -230,10 +235,104 @@ const ChessComponent = ({ color }) => {
     }
   };
 
+  // Fetch current position recommendation
+  const fetchCurrentRecommendation = () => {
+    if (isWhiteTurn && !gameOver) {
+      fetch(`${API_BASE}/analyze`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.best_move) {
+            setCurrentRecommendation(data.best_move);
+          }
+        })
+        .catch(() => {
+          setCurrentRecommendation("");
+        });
+    }
+  };
+
+  // Fetch current recommendation when it's White's turn
+  useEffect(() => {
+    if (isWhiteTurn && !gameOver) {
+      fetchCurrentRecommendation();
+    }
+  }, [isWhiteTurn, gameOver, fen]);
+
   return (
     <div className="flex-center">
       <h4>Kaushik Chess APP</h4>
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
+        {/* Recommended Move - Left Side */}
+        {recommendedMove && (
+          <div style={{ 
+            padding: 15, 
+            backgroundColor: "rgba(255, 255, 255, 0.1)", 
+            borderRadius: 8,
+            width: 200,
+            maxHeight: 400,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center"
+          }}>
+            <h5 style={{ margin: "0 0 10px 0", color: "#fff", textAlign: "center" }}>Recommended Move:</h5>
+            <div style={{ 
+              fontSize: "18px", 
+              fontWeight: "bold", 
+              color: "#4CAF50", 
+              textAlign: "center",
+              padding: "10px",
+              backgroundColor: "rgba(76, 175, 80, 0.2)",
+              borderRadius: "5px"
+            }}>
+              {recommendedMove}
+            </div>
+            <p style={{ 
+              fontSize: "12px", 
+              color: "#ccc", 
+              textAlign: "center", 
+              margin: "10px 0 0 0" 
+            }}>
+              Stockfish would have played this instead
+            </p>
+          </div>
+        )}
+        
+        {/* Current Position Recommendation - Left Side */}
+        {isWhiteTurn && !gameOver && (
+          <div style={{ 
+            padding: 15, 
+            backgroundColor: "rgba(255, 255, 255, 0.1)", 
+            borderRadius: 8,
+            width: 200,
+            maxHeight: 400,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            marginTop: "10px"
+          }}>
+            <h5 style={{ margin: "0 0 10px 0", color: "#fff", textAlign: "center" }}>Stockfish Recommends:</h5>
+            <div style={{ 
+              fontSize: "18px", 
+              fontWeight: "bold", 
+              color: "#2196F3", 
+              textAlign: "center",
+              padding: "10px",
+              backgroundColor: "rgba(33, 150, 243, 0.2)",
+              borderRadius: "5px"
+            }}>
+              {currentRecommendation || "..."}
+            </div>
+            <p style={{ 
+              fontSize: "12px", 
+              color: "#ccc", 
+              textAlign: "center", 
+              margin: "10px 0 0 0" 
+            }}>
+              Best move for current position
+            </p>
+          </div>
+        )}
+        
         <div style={{ position: "relative" }}>
           <Chessboard
             key={fen} // Force re-render when FEN changes
