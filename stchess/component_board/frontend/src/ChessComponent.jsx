@@ -68,6 +68,42 @@ const ChessComponent = ({ color }) => {
       });
   }, []);
 
+  // Ensure chess.js state is always synchronized with FEN
+  useEffect(() => {
+    if (fen) {
+      chess.current.load(fen);
+    }
+  }, [fen]);
+
+  // Validate board state and reset if corrupted
+  const validateBoardState = () => {
+    try {
+      const tempChess = new Chess(fen);
+      // Check if the board is in a valid state
+      if (!tempChess.validate_fen(fen).valid) {
+        console.warn("Invalid board state detected, resetting...");
+        handleReset();
+      }
+    } catch (error) {
+      console.error("Board state validation error:", error);
+      handleReset();
+    }
+  };
+
+  // Debug function to log board state
+  const logBoardState = () => {
+    console.log("Current FEN:", fen);
+    console.log("Chess.js board:", chess.current.fen());
+    console.log("Board pieces:", chess.current.board());
+  };
+
+  // Log board state when it changes
+  useEffect(() => {
+    if (fen) {
+      logBoardState();
+    }
+  }, [fen]);
+
   // Helper: format move history for display
   const formatMoveHistory = (moves) => {
     const formatted = [];
@@ -102,8 +138,9 @@ const ChessComponent = ({ color }) => {
       moveToSend.promotion = promo;
     }
     
-    // Check if move is legal locally first
-    if (!chess.current.move(moveToSend)) {
+    // Check if move is legal locally first (but don't apply it)
+    const tempChess = new Chess(fen);
+    if (!tempChess.move(moveToSend)) {
       setError("Illegal move. Try again.");
       setTimeout(() => setError(""), 3000);
       return false; // Prevent visual move
