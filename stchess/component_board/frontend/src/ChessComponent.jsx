@@ -75,6 +75,17 @@ const ChessComponent = ({ color }) => {
     }
   }, [fen]);
 
+  // Force board refresh to prevent piece overlap
+  useEffect(() => {
+    if (fen) {
+      // Force a complete board re-render by temporarily clearing and reloading
+      const timer = setTimeout(() => {
+        chess.current.load(fen);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [fen]);
+
   // Validate board state and reset if corrupted
   const validateBoardState = () => {
     try {
@@ -225,6 +236,7 @@ const ChessComponent = ({ color }) => {
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
         <div style={{ position: "relative" }}>
           <Chessboard
+            key={fen} // Force re-render when FEN changes
             width={400}
             id="chessboard"
             position={fen}
