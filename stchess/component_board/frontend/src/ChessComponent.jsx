@@ -203,24 +203,6 @@ const ChessComponent = ({ color }) => {
             onDrop={isWhiteTurn && !loading && !gameOver ? (move) => handleMove({ from: move.sourceSquare, to: move.targetSquare }) : undefined}
             draggable={isWhiteTurn && !loading && !gameOver}
           />
-          {gameOver && (
-            <div style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              backgroundColor: "rgba(0, 0, 0, 0.9)",
-              color: "white",
-              padding: "20px",
-              borderRadius: "10px",
-              textAlign: "center",
-              zIndex: 1000
-            }}>
-              <h3>Better luck next time!</h3>
-              <p>{gameResult === "1-0" ? "White wins!" : gameResult === "0-1" ? "Black wins!" : "Draw!"}</p>
-              <button onClick={handleReset} style={{ marginTop: "10px" }}>New Game</button>
-            </div>
-          )}
         </div>
         
         {/* Move History - Right Side */}
@@ -259,9 +241,24 @@ const ChessComponent = ({ color }) => {
         </div>
       )}
       
-      <p style={{ color: "#fff", margin: 0 }}>FEN: {fen}</p>
       <p style={{ color: "#fff", margin: 0 }}>Turn: {isWhiteTurn ? "White (You)" : "Black (AI)"}</p>
       {error && <div style={{ background: "#bfa", color: "#222", padding: 8, borderRadius: 6, margin: 8 }}>{error}</div>}
+      
+      {/* Game Result at Bottom */}
+      {gameOver && (
+        <div style={{
+          padding: "15px 20px",
+          borderRadius: "8px",
+          margin: "10px 0",
+          textAlign: "center",
+          fontWeight: "bold",
+          backgroundColor: gameResult === "1-0" ? "#4CAF50" : gameResult === "0-1" ? "#F44336" : "#FF9800",
+          color: "white"
+        }}>
+          {gameResult === "1-0" ? "White wins!" : gameResult === "0-1" ? "Black wins!" : "Draw!"}
+        </div>
+      )}
+      
       <button onClick={handleReset} disabled={loading} style={{ marginTop: 16 }}>Reset Game</button>
     </div>
   );

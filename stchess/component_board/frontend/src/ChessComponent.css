@@ -15,3 +15,56 @@ body {
     padding: 0;
     background-color: #1a1a1a;
 }
+
+/* Force chess pieces to stay within board boundaries */
+.chess-board {
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.chess-board * {
+    position: relative !important;
+}
+
+/* Ensure pieces don't float outside */
+.chess-board img {
+    position: absolute !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* Target the specific chessboard container */
+#chessboard {
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+#chessboard * {
+    position: relative !important;
+}
+
+/* Prevent pieces from floating outside */
+#chessboard img {
+    position: absolute !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+/* Safari-specific fixes for floating pieces */
+@supports (-webkit-appearance: none) {
+    #chessboard {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+    }
+    
+    #chessboard img {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+}

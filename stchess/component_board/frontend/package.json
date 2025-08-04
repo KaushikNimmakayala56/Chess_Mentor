@@ -14,6 +14,7 @@
     "chessboardjsx": "^2.4.7",
     "ii-react-chessboard": "^2.0.3",
     "react": "^16.13.1",
+    "react-chessboard": "^4.4.0",
     "react-chessboardjs-wrapper": "^0.4.2",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.4",
