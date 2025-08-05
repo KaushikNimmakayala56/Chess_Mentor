@@ -17,6 +17,7 @@ const GameReview = () => {
     if (gameParam) {
       try {
         const data = JSON.parse(decodeURIComponent(gameParam));
+        console.log('Game data received:', data);
         setGameData(data);
         setCurrentMoveIndex(-1); // Start at initial position
         setLoading(false);
@@ -61,7 +62,17 @@ const GameReview = () => {
     } else if (currentMoveIndex < gameData.moves.length) {
       // Show position after this move
       const moveData = gameData.moves[currentMoveIndex];
-      setCurrentFen(moveData.fen);
+      console.log('Current move data:', moveData, 'Index:', currentMoveIndex);
+      if (moveData && moveData.fen) {
+        // Apply the move to the FEN to show the position after the move
+        const chess = new Chess(moveData.fen);
+        const move = chess.move(moveData.move);
+        if (move) {
+          setCurrentFen(chess.fen());
+        } else {
+          setCurrentFen(moveData.fen);
+        }
+      }
     }
   }, [currentMoveIndex, gameData]);
 
@@ -163,7 +174,7 @@ const GameReview = () => {
                   fontWeight: index === currentMoveIndex ? "bold" : "normal"
                 }}
               >
-                {index + 1}. {moveData.move}
+                {index + 1}. {moveData.move || moveData}
               </div>
             ))}
           </div>

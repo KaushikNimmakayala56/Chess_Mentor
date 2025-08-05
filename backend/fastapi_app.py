@@ -186,11 +186,18 @@ def make_move(req: MoveRequest):
         # Analyze the user's move quality
         analysis_result = analyze_move_quality(board, move, engine)
         
+        # Store FEN before the move
+        fen_before_move = board.fen()
+        
         # Apply user's move
         board.push(move)
         
-        # Add user move to history
-        move_history.append(analysis_result['move_san'])
+        # Add user move to history with FEN (before the move)
+        move_data = {
+            'move': analysis_result['move_san'],
+            'fen': fen_before_move  # FEN before the move
+        }
+        move_history.append(move_data)
         
         # Generate feedback for USER'S move only
         feedback = get_move_feedback(analysis_result)
@@ -200,8 +207,14 @@ def make_move(req: MoveRequest):
         if not board.is_game_over():
             result = engine.play(board, chess.engine.Limit(depth=5))
             ai_move = result.move
-            # Add Stockfish move to history (no analysis)
-            move_history.append(board.san(ai_move))
+            # Store FEN before AI move
+            fen_before_ai_move = board.fen()
+            # Add Stockfish move to history with FEN (before the move)
+            ai_move_data = {
+                'move': board.san(ai_move),
+                'fen': fen_before_ai_move  # FEN before the move
+            }
+            move_history.append(ai_move_data)
             board.push(ai_move)
         
         return {
