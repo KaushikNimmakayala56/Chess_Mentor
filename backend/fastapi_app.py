@@ -109,11 +109,22 @@ def analyze_move_quality(board_before, move, engine):
     best_move = engine.play(board_before, chess.engine.Limit(depth=5)).move
     best_move_san = board_before.san(best_move)
     
+    # Apply best move to get its evaluation for CPL calculation
+    board_after_best = board_before.copy()
+    board_after_best.push(best_move)
+    analysis_after_best = engine.analyse(board_after_best, chess.engine.Limit(depth=5))
+    score_after_best_move = analysis_after_best["score"].relative.score(mate_score=10000)
+    
+    # Calculate CPL (Centipawn Loss) - user move vs best move
+    score_after_user_move = score_after
+    cpl = abs(score_after_best_move - score_after_user_move)
+    
     return {
         'material_change': material_change,
         'positional_change': positional_change,
         'best_move': best_move_san,
-        'move_san': board_before.san(move)
+        'move_san': board_before.san(move),
+        'cpl': cpl
     }
 
 def get_material_count(board):
@@ -168,12 +179,10 @@ def make_move(req: MoveRequest):
         }
         move_history.append(move_data)
         
-        # Generate feedback for USER'S move only
-        classification, priority = classify_move(analysis_result['material_change'], 
-                                                analysis_result['positional_change'])
-        feedback = generate_feedback_message(classification, priority,
-                                           analysis_result['material_change'],
-                                           analysis_result['positional_change'],
+        # Generate feedback for USER'S move only using CPL
+        classification = classify_move(analysis_result['cpl'])
+        feedback = generate_feedback_message(classification,
+                                           analysis_result['cpl'],
                                            analysis_result['move_san'],
                                            analysis_result['best_move'])
         
@@ -203,7 +212,8 @@ def make_move(req: MoveRequest):
                 'positional_change': analysis_result['positional_change'],
                 'feedback': feedback,
                 'best_move': analysis_result['best_move'],
-                'user_move': analysis_result['move_san']
+                'user_move': analysis_result['move_san'],
+                'cpl': analysis_result['cpl']
             }
         }
     except Exception as e:

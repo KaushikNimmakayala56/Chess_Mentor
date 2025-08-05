@@ -1,11 +1,11 @@
 """
 Chess move classification module.
-Contains logic for classifying moves and generating feedback messages.
+Contains logic for classifying moves and generating feedback messages using Chess.com-style CPL thresholds.
 """
 
 import chess
 
-# Piece values for material calculation
+# Piece values for material calculation (kept for potential future use)
 PIECE_VALUES = {
     chess.PAWN: 100,
     chess.KNIGHT: 320,
@@ -15,84 +15,62 @@ PIECE_VALUES = {
     chess.KING: 20000
 }
 
-def classify_move(material_change, positional_change):
+def classify_move(cpl):
     """
-    Classify a move based on material and positional changes.
+    Classify a move based on Centipawn Loss (CPL) using Chess.com-style thresholds.
     
     Args:
-        material_change (int): Change in material value (positive = gain, negative = loss)
-        positional_change (int): Change in positional evaluation (positive = better, negative = worse)
+        cpl (int): Centipawn loss compared to the best move
     
     Returns:
-        tuple: (classification, priority) where classification is one of:
-               'excellent', 'good', 'okay', 'inaccuracy', 'blunder'
-               and priority is 'material' or 'positional'
+        str: Move classification - one of:
+             'brilliant', 'best', 'excellent', 'good', 'book', 'inaccuracy', 'mistake', 'blunder'
     """
-    # Material loss is always bad
-    if material_change < -50:
-        if material_change < -200:
-            return 'blunder', 'material'
-        else:
-            return 'inaccuracy', 'material'
-    
-    # Material gain is always good
-    elif material_change > 50:
-        if material_change > 200:
-            return 'excellent', 'material'
-        else:
-            return 'good', 'material'
-    
-    # No material change, evaluate by position
-    else:
-        if positional_change > 200:
-            return 'excellent', 'positional'
-        elif positional_change > 50:
-            return 'good', 'positional'
-        elif positional_change > -50:
-            return 'okay', 'positional'
-        elif positional_change > -200:
-            return 'inaccuracy', 'positional'
-        else:
-            return 'blunder', 'positional'
+    if cpl == 0:
+        # TODO: Add logic to distinguish "brilliant" from "best" moves
+        # For now, treat all 0 CPL moves as "best"
+        return 'best'
+    elif 1 <= cpl <= 20:
+        return 'excellent'
+    elif 21 <= cpl <= 50:
+        return 'good'
+    elif 51 <= cpl <= 100:
+        return 'inaccuracy'
+    elif 101 <= cpl <= 300:
+        return 'mistake'
+    else:  # cpl >= 301
+        return 'blunder'
 
-def generate_feedback_message(classification, priority, material_change, positional_change, user_move, best_move):
+def generate_feedback_message(classification, cpl, user_move, best_move):
     """
-    Generate feedback message based on move classification.
+    Generate feedback message based on Chess.com-style move classification.
     
     Args:
-        classification (str): Move classification ('excellent', 'good', 'okay', 'inaccuracy', 'blunder')
-        priority (str): Whether evaluation is based on 'material' or 'positional'
-        material_change (int): Change in material value
-        positional_change (int): Change in positional evaluation
+        classification (str): Move classification from classify_move()
+        cpl (int): Centipawn loss value
         user_move (str): The move played by the user (in SAN notation)
         best_move (str): The best move according to the engine (in SAN notation)
     
     Returns:
         str: Formatted feedback message
     """
-    # Material-based feedback
-    if priority == 'material':
-        if classification == 'blunder':
-            return f"Your move {user_move}: Blunder! You lost material (-{abs(material_change)/100:.1f}) (Best: {best_move})"
-        elif classification == 'inaccuracy':
-            return f"Your move {user_move}: Inaccuracy. You lost material (-{abs(material_change)/100:.1f}) (Best: {best_move})"
-        elif classification == 'good':
-            return f"Your move {user_move}: Good move! You won material (+{material_change/100:.1f})"
-        elif classification == 'excellent':
-            return f"Your move {user_move}: Excellent! You won material (+{material_change/100:.1f})"
-    
-    # Positional-based feedback
-    else:  # priority == 'positional'
-        if classification == 'blunder':
-            return f"Your move {user_move}: Blunder! {positional_change/100:.1f} (Best: {best_move})"
-        elif classification == 'inaccuracy':
-            return f"Your move {user_move}: Inaccuracy. {positional_change/100:.1f} (Best: {best_move})"
-        elif classification == 'okay':
-            return f"Your move {user_move}: Okay move. {positional_change/100:.1f}"
-        elif classification == 'good':
-            return f"Your move {user_move}: Good move! +{positional_change/100:.1f}"
-        elif classification == 'excellent':
-            return f"Your move {user_move}: Excellent! +{positional_change/100:.1f}"
-    
-    # Fallback (should never reach here)
-    return f"Your move {user_move}: Move analyzed."
+    if classification == 'brilliant':
+        return f"Your move {user_move}: Brilliant! ✨ (CPL: {cpl})"
+    elif classification == 'best':
+        return f"Your move {user_move}: Best Move! 🎯 (CPL: {cpl})"
+    elif classification == 'excellent':
+        return f"Your move {user_move}: Excellent! 💚 (CPL: {cpl})"
+    elif classification == 'good':
+        return f"Your move {user_move}: Good Move! 👍 (CPL: {cpl})"
+    elif classification == 'book':
+        # TODO: Implement book move detection
+        return f"Your move {user_move}: Book Move! 📚 (CPL: {cpl})"
+    elif classification == 'inaccuracy':
+        return f"Your move {user_move}: Inaccuracy ⚠️ (CPL: {cpl}) - Best: {best_move}"
+    elif classification == 'mistake':
+        return f"Your move {user_move}: Mistake ❌ (CPL: {cpl}) - Best: {best_move}"
+    elif classification == 'blunder':
+        return f"Your move {user_move}: Blunder! 💥 (CPL: {cpl}) - Best: {best_move}"
+    else:
+        # Fallback
+        return f"Your move {user_move}: Move analyzed (CPL: {cpl})"
