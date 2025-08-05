@@ -228,4 +228,57 @@ def reset():
 
 @app.on_event("shutdown")
 def shutdown_event():
-    engine.quit() 
+    engine.quit()
+
+def main():
+    """Main entry point for the chess application"""
+    import uvicorn
+    import webbrowser
+    import threading
+    import time
+    import os
+    
+    # Start the FastAPI server
+    def start_server():
+        uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+    
+    # Start React frontend
+    def start_frontend():
+        import subprocess
+        frontend_path = os.path.join(os.path.dirname(__file__), "..", "stchess", "component_board", "frontend")
+        if os.path.exists(frontend_path):
+            subprocess.Popen(["npm", "start"], cwd=frontend_path)
+    
+    print("🚀 Starting ChessMentor-AI...")
+    print("📡 Backend API: http://localhost:8000")
+    print("🎮 Frontend GUI: http://localhost:3000")
+    
+    # Start backend in a separate thread
+    server_thread = threading.Thread(target=start_server, daemon=True)
+    server_thread.start()
+    
+    # Wait a moment for server to start
+    time.sleep(2)
+    
+    # Start frontend
+    try:
+        start_frontend()
+        time.sleep(3)
+        # Open browser to the React app
+        webbrowser.open("http://localhost:3000")
+    except Exception as e:
+        print(f"⚠️  Could not start frontend automatically: {e}")
+        print("🔧 Please run manually: cd stchess/component_board/frontend && npm start")
+    
+    print("✅ ChessMentor-AI is running!")
+    print("🛑 Press Ctrl+C to stop")
+    
+    try:
+        # Keep the main thread alive
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n🛑 Shutting down ChessMentor-AI...")
+
+if __name__ == "__main__":
+    main() 

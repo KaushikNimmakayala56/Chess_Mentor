@@ -49,7 +49,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "chessmentor=play_gui_app:main",
+            "chessmentor=backend.fastapi_app:main",
         ],
     },
     include_package_data=True,
