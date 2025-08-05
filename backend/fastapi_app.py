@@ -5,6 +5,7 @@ import chess
 import chess.engine
 import os
 from starlette.responses import JSONResponse
+from move_classification import classify_move, generate_feedback_message
 
 app = FastAPI()
 
@@ -140,39 +141,7 @@ def get_material_count(board):
     
     return white_material - black_material
 
-def get_move_feedback(analysis_result):
-    """Generate feedback based on material and positional analysis"""
-    material_change = analysis_result['material_change']
-    positional_change = analysis_result['positional_change']
-    best_move = analysis_result['best_move']
-    user_move = analysis_result['move_san']
-    
-    # Material loss is always bad
-    if material_change < -50:
-        if material_change < -200:
-            return f"Your move {user_move}: Blunder! You lost material (-{abs(material_change)/100:.1f}) (Best: {best_move})"
-        else:
-            return f"Your move {user_move}: Inaccuracy. You lost material (-{abs(material_change)/100:.1f}) (Best: {best_move})"
-    
-    # Material gain is always good
-    elif material_change > 50:
-        if material_change > 200:
-            return f"Your move {user_move}: Excellent! You won material (+{material_change/100:.1f})"
-        else:
-            return f"Your move {user_move}: Good move! You won material (+{material_change/100:.1f})"
-    
-    # No material change, evaluate by position
-    else:
-        if positional_change > 200:
-            return f"Your move {user_move}: Excellent! +{positional_change/100:.1f}"
-        elif positional_change > 50:
-            return f"Your move {user_move}: Good move! +{positional_change/100:.1f}"
-        elif positional_change > -50:
-            return f"Your move {user_move}: Okay move. {positional_change/100:.1f}"
-        elif positional_change > -200:
-            return f"Your move {user_move}: Inaccuracy. {positional_change/100:.1f} (Best: {best_move})"
-        else:
-            return f"Your move {user_move}: Blunder! {positional_change/100:.1f} (Best: {best_move})"
+
 
 @app.post("/move")
 def make_move(req: MoveRequest):
@@ -200,7 +169,13 @@ def make_move(req: MoveRequest):
         move_history.append(move_data)
         
         # Generate feedback for USER'S move only
-        feedback = get_move_feedback(analysis_result)
+        classification, priority = classify_move(analysis_result['material_change'], 
+                                                analysis_result['positional_change'])
+        feedback = generate_feedback_message(classification, priority,
+                                           analysis_result['material_change'],
+                                           analysis_result['positional_change'],
+                                           analysis_result['move_san'],
+                                           analysis_result['best_move'])
         
         # Stockfish move - NO ANALYSIS, just apply the move
         ai_move = None

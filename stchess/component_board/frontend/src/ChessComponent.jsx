@@ -122,8 +122,8 @@ const ChessComponent = ({ color }) => {
     const formatted = [];
     for (let i = 0; i < moves.length; i += 2) {
       const moveNumber = Math.floor(i / 2) + 1;
-      const whiteMove = moves[i];
-      const blackMove = moves[i + 1];
+      const whiteMove = moves[i]?.move || moves[i]; // Handle both object and string formats
+      const blackMove = moves[i + 1]?.move || moves[i + 1];
       formatted.push(`${moveNumber}. ${whiteMove}${blackMove ? ` ${blackMove}` : ''}`);
     }
     return formatted;
