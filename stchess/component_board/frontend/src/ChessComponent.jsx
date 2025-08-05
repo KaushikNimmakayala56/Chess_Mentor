@@ -404,6 +404,29 @@ const ChessComponent = ({ color }) => {
           color: "white"
         }}>
           {gameResult === "1-0" ? "White wins!" : gameResult === "0-1" ? "Black wins!" : "Draw!"}
+          <button 
+            onClick={() => {
+              const gameData = {
+                moves: moveHistory,
+                result: gameResult,
+                fen: fen
+              };
+              const encodedData = encodeURIComponent(JSON.stringify(gameData));
+              window.open(`/review?game=${encodedData}`, '_blank');
+            }}
+            style={{
+              marginLeft: "15px",
+              padding: "8px 16px",
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              border: "none",
+              borderRadius: "4px",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            Review Game
+          </button>
         </div>
       )}
       

@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STOCKFISH_PATH = os.path.join("stockfish", "stockfish")
+STOCKFISH_PATH = os.path.join("..", "stockfish", "stockfish")
 
 # Global state (for MVP, not for production)
 board = chess.Board()
