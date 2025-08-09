@@ -12,9 +12,29 @@ const GameReview = () => {
   // Parse game data from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const gameId = urlParams.get('id');
     const gameParam = urlParams.get('game');
     
-    if (gameParam) {
+    if (gameId) {
+      // Fetch game data from backend using ID
+      fetch(`http://localhost:8000/game/${gameId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            console.error('Game not found:', data.error);
+          } else {
+            console.log('Game data received:', data);
+            setGameData(data);
+            setCurrentMoveIndex(-1); // Start at initial position
+          }
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Failed to fetch game data:', error);
+          setLoading(false);
+        });
+    } else if (gameParam) {
+      // Fallback to old URL format
       try {
         const data = JSON.parse(decodeURIComponent(gameParam));
         console.log('Game data received:', data);

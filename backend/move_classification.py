@@ -15,17 +15,22 @@ PIECE_VALUES = {
     chess.KING: 20000
 }
 
-def classify_move(cpl):
+def classify_move(cpl, is_book=False):
     """
     Classify a move based on Centipawn Loss (CPL) using Chess.com-style thresholds.
     
     Args:
         cpl (int): Centipawn loss compared to the best move
+        is_book (bool): Whether the move is from opening book
     
     Returns:
         str: Move classification - one of:
              'brilliant', 'best', 'excellent', 'good', 'book', 'inaccuracy', 'mistake', 'blunder'
     """
+    # Book moves take priority over CPL analysis
+    if is_book:
+        return 'book'
+    
     if cpl == 0:
         # TODO: Add logic to distinguish "brilliant" from "best" moves
         # For now, treat all 0 CPL moves as "best"
@@ -41,7 +46,7 @@ def classify_move(cpl):
     else:  # cpl >= 301
         return 'blunder'
 
-def generate_feedback_message(classification, cpl, user_move, best_move):
+def generate_feedback_message(classification, cpl, user_move, best_move, opening_info=None, show_opening_details=False):
     """
     Generate feedback message based on Chess.com-style move classification.
     
@@ -50,6 +55,7 @@ def generate_feedback_message(classification, cpl, user_move, best_move):
         cpl (int): Centipawn loss value
         user_move (str): The move played by the user (in SAN notation)
         best_move (str): The best move according to the engine (in SAN notation)
+        opening_info (dict, optional): Opening information if available
     
     Returns:
         str: Formatted feedback message
@@ -63,8 +69,10 @@ def generate_feedback_message(classification, cpl, user_move, best_move):
     elif classification == 'good':
         return f"Your move {user_move}: Good Move! 👍 (CPL: {cpl})"
     elif classification == 'book':
-        # TODO: Implement book move detection
-        return f"Your move {user_move}: Book Move! 📚 (CPL: {cpl})"
+        if show_opening_details and opening_info:
+            return f"Your move {user_move}: Book Move! 📚 - Playing the {opening_info['name']} ({opening_info['eco']})"
+        else:
+            return f"Your move {user_move}: Book Move! 📚"
     elif classification == 'inaccuracy':
         return f"Your move {user_move}: Inaccuracy ⚠️ (CPL: {cpl}) - Best: {best_move}"
     elif classification == 'mistake':

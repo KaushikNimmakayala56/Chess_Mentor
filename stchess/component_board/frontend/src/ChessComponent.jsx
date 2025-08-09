@@ -405,14 +405,26 @@ const ChessComponent = ({ color }) => {
         }}>
           {gameResult === "1-0" ? "White wins!" : gameResult === "0-1" ? "Black wins!" : "Draw!"}
           <button 
-            onClick={() => {
+            onClick={async () => {
               const gameData = {
                 moves: moveHistory,
                 result: gameResult,
                 fen: fen
               };
-              const encodedData = encodeURIComponent(JSON.stringify(gameData));
-              window.open(`/review?game=${encodedData}`, '_blank');
+              
+              try {
+                const response = await fetch('http://localhost:8000/store-game', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(gameData)
+                });
+                const data = await response.json();
+                window.open(`http://localhost:3000/review?id=${data.game_id}`, '_blank');
+              } catch (error) {
+                console.error('Error storing game:', error);
+              }
             }}
             style={{
               marginLeft: "15px",

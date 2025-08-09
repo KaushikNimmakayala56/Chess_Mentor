@@ -6,6 +6,7 @@ import chess.engine
 import os
 from starlette.responses import JSONResponse
 from move_classification import classify_move, generate_feedback_message
+from openings import check_book_move_for_user, reset_book_logic
 
 app = FastAPI()
 
@@ -24,6 +25,12 @@ STOCKFISH_PATH = os.path.join("..", "stockfish", "stockfish")
 board = chess.Board()
 engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
 move_history = []  # Track moves for history
+full_san_sequence = []  # Track both sides' SAN moves for book streak
+
+# Simple game storage for review (max 10 games)
+from collections import OrderedDict
+stored_games = OrderedDict()
+MAX_STORED_GAMES = 10
 
 class MoveRequest(BaseModel):
     move: dict
@@ -80,7 +87,7 @@ def set_state(req: FenRequest):
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
 
-def analyze_move_quality(board_before, move, engine):
+def analyze_move_quality(board_before, move, engine, full_sequence):
     """Analyze the quality of a move considering material and position"""
     # Get material count before move
     material_before = get_material_count(board_before)
@@ -88,6 +95,10 @@ def analyze_move_quality(board_before, move, engine):
     # Apply the move
     board_after = board_before.copy()
     board_after.push(move)
+    move_san = board_before.san(move)
+    
+    # Check if this USER move is a book move
+    is_book, opening_info = check_book_move_for_user(full_sequence, move_san)
     
     # Get material count after move
     material_after = get_material_count(board_after)
@@ -123,8 +134,10 @@ def analyze_move_quality(board_before, move, engine):
         'material_change': material_change,
         'positional_change': positional_change,
         'best_move': best_move_san,
-        'move_san': board_before.san(move),
-        'cpl': cpl
+        'move_san': move_san,
+        'cpl': cpl,
+        'is_book': is_book,
+        'opening_info': opening_info
     }
 
 def get_material_count(board):
@@ -156,21 +169,24 @@ def get_material_count(board):
 
 @app.post("/move")
 def make_move(req: MoveRequest):
-    global move_history
+    global move_history, full_san_sequence
     move_dict = req.move
     move_uci = move_dict['from'] + move_dict['to']
     if 'promotion' in move_dict and move_dict['promotion']:
         move_uci += move_dict['promotion']
     move = chess.Move.from_uci(move_uci)
     try:
-        # Analyze the user's move quality
-        analysis_result = analyze_move_quality(board, move, engine)
+        # Analyze the user's move quality with current sequence
+        analysis_result = analyze_move_quality(board, move, engine, full_san_sequence)
         
         # Store FEN before the move
         fen_before_move = board.fen()
         
         # Apply user's move
         board.push(move)
+        
+        # Update full SAN sequence with user's move
+        full_san_sequence.append(analysis_result['move_san'])
         
         # Add user move to history with FEN (before the move)
         move_data = {
@@ -179,12 +195,17 @@ def make_move(req: MoveRequest):
         }
         move_history.append(move_data)
         
-        # Generate feedback for USER'S move only using CPL
-        classification = classify_move(analysis_result['cpl'])
+        # Generate feedback for USER'S move only using CPL and book detection
+        classification = classify_move(analysis_result['cpl'], analysis_result['is_book'])
+        
+        # Use opening info from analysis (already computed in analyze_move_quality)
+        opening_info = analysis_result['opening_info']
+        
         feedback = generate_feedback_message(classification,
                                            analysis_result['cpl'],
                                            analysis_result['move_san'],
-                                           analysis_result['best_move'])
+                                           analysis_result['best_move'],
+                                           opening_info)
         
         # Stockfish move - NO ANALYSIS, just apply the move
         ai_move = None
@@ -194,12 +215,16 @@ def make_move(req: MoveRequest):
             # Store FEN before AI move
             fen_before_ai_move = board.fen()
             # Add Stockfish move to history with FEN (before the move)
+            ai_move_san = board.san(ai_move)
             ai_move_data = {
-                'move': board.san(ai_move),
+                'move': ai_move_san,
                 'fen': fen_before_ai_move  # FEN before the move
             }
             move_history.append(ai_move_data)
             board.push(ai_move)
+
+            # Update full SAN sequence with AI move - this may break the book streak
+            full_san_sequence.append(ai_move_san)
         
         return {
             'fen': board.fen(),
@@ -221,10 +246,54 @@ def make_move(req: MoveRequest):
 
 @app.post("/reset")
 def reset():
-    global board, move_history
+    global board, move_history, full_san_sequence
     board = chess.Board()
     move_history = []
+    full_san_sequence = []
+    reset_book_logic()  # Reset the book logic state
     return {'fen': board.fen()}
+
+@app.post("/store-game")
+def store_game(request: Request):
+    import uuid
+    import asyncio
+    
+    async def get_body():
+        return await request.json()
+    
+    game_data = asyncio.run(get_body())
+    game_id = str(uuid.uuid4())
+    
+    # Add timestamp for display
+    import datetime
+    game_data['timestamp'] = datetime.datetime.now().isoformat()
+    
+    # Remove oldest game if we're at the limit
+    if len(stored_games) >= MAX_STORED_GAMES:
+        stored_games.popitem(last=False)  # Remove oldest (first item)
+    
+    stored_games[game_id] = game_data
+    return {"game_id": game_id}
+
+@app.get("/game/{game_id}")
+def get_game(game_id: str):
+    if game_id in stored_games:
+        return stored_games[game_id]
+    return {"error": "Game not found"}
+
+@app.get("/games")
+def list_games():
+    """List all stored games with basic info"""
+    games_list = []
+    for game_id, game_data in stored_games.items():
+        games_list.append({
+            "id": game_id,
+            "result": game_data.get("result", "Unknown"),
+            "timestamp": game_data.get("timestamp", "Unknown"),
+            "move_count": len(game_data.get("moves", [])),
+            "url": f"/review?id={game_id}"
+        })
+    return {"games": games_list, "total": len(games_list), "max_limit": MAX_STORED_GAMES}
 
 @app.on_event("shutdown")
 def shutdown_event():
